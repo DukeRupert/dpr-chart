@@ -27,16 +27,38 @@
     "One of these easiest and most useful things to calculate in any tactical combat game is damage per round (DPR) on attack roles.";
 
   let ac = ["10", "11", "12", "13", "14", "15", "16"];
-  let set = ["10", "11", "12", "13", "14", "15", "16"];
   let attackBonus = 5;
-  let minDamage = 1;
-  let maxDamage = 12;
+  let damageBonus = 1;
+  let d4 = 0;
+  let d6 = 0;
+  let d8 = 0;
+  let d10 = 0;
+  let d12 = 0;
   let critChance = 0.05;
   let critMultiplier = 2;
   let apr = 1;
 
-  // average damage
-  $: avgDamage = (minDamage + maxDamage) / 2;
+  /*To calculate the average dice value, 
+  add 1 to the max value of all dice, 
+  divide the result by 2, 
+  then multiply that result by the 
+  number of dies.*/
+  function averageDamage(dice: number, count: number ): number {
+    let base = (dice + 1) / 2
+    return base * count
+  }
+
+  function totalAverageDamage(d4: number, d6:number, d8:number, d10:number, d12:number) {
+    let avg_d4 = averageDamage(4, d4)
+    let avg_d6 = averageDamage(6, d6)
+    let avg_d8 = averageDamage(8, d8)
+    let avg_d10 = averageDamage(10, d10)
+    let avg_d12 = averageDamage(12, d12)
+    return avg_d4 + avg_d6 + avg_d8 + avg_d10 + avg_d12
+  }
+
+  // average damage of dice
+  $: totalAverageDiceDamage = totalAverageDamage(d4, d6, d8, d10, d12)
 
   // n = (ac – attackBonus)
   $: n = ac.map((value) => parseInt(value) - attackBonus);
@@ -49,8 +71,8 @@
 
   // DPR = ((Hit% - Crit%) x dmg/hit + Crit% x dmg/crit) APR
   $: dpr = p.map((value) => {
-    let v = (value - critChance) * avgDamage;
-    let c = critChance * avgDamage * critMultiplier;
+    let v = (value - critChance) * (totalAverageDiceDamage + damageBonus);
+    let c = critChance * totalAverageDiceDamage * critMultiplier;
     let result = (v + c) * apr;
     return result.toString();
   });
@@ -123,6 +145,27 @@
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 lg:grid-cols-6 py-5">
       <div>
         <label
+          for="apr"
+          class="block text-sm font-medium leading-6 text-gray-900">APR</label
+        >
+        <div class="mt-2">
+          <input
+            type="number"
+            name="apr"
+            id="apr"
+            min="0"
+            max="20"
+            bind:value={apr}
+            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            aria-describedby="attacks-per-round"
+          />
+        </div>
+        <p class="mt-2 text-sm text-gray-500" id="attacks-per-round">
+          How many attacks per round that you make.
+        </p>
+      </div>
+      <div>
+        <label
           for="attackBonus"
           class="block text-sm font-medium leading-6 text-gray-900"
           >Attack Bonus</label
@@ -145,46 +188,134 @@
       </div>
       <div>
         <label
-          for="minDamage"
+          for="damageBonus"
           class="block text-sm font-medium leading-6 text-gray-900"
-          >Minimum Damage</label
+          >Damage Bonus</label
         >
         <div class="mt-2">
           <input
             type="number"
-            name="minDamage"
-            id="minDamage"
+            name="damageBonus"
+            id="damageBonus"
             min="0"
             max="20"
-            bind:value={minDamage}
+            bind:value={damageBonus}
             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            aria-describedby="min-damage"
+            aria-describedby="damage-bonus"
           />
         </div>
-        <p class="mt-2 text-sm text-gray-500" id="min-damage">
-          The minimum amount of damage you deal per hit.
+        <p class="mt-2 text-sm text-gray-500" id="damage-bonus">
+          Your ability bonus to damage.
         </p>
       </div>
       <div>
         <label
-          for="maxDamage"
+          for="d4"
           class="block text-sm font-medium leading-6 text-gray-900"
-          >Max Damage</label
+          >d4 Damage</label
         >
         <div class="mt-2">
           <input
             type="number"
-            name="maxDamage"
-            id="maxDamage"
+            name="d4"
+            id="d4"
             min="0"
             max="20"
-            bind:value={maxDamage}
+            bind:value={d4}
             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            aria-describedby="max-damage"
+            aria-describedby="d4-damage"
           />
         </div>
-        <p class="mt-2 text-sm text-gray-500" id="max-damage">
-          The maximum amount of damage you deal per hit.
+        <p class="mt-2 text-sm text-gray-500" id="d4-damage">
+          The number of d4 damage dice.
+        </p>
+      </div>
+      <div>
+        <label
+          for="d6"
+          class="block text-sm font-medium leading-6 text-gray-900"
+          >d6 Damage</label
+        >
+        <div class="mt-2">
+          <input
+            type="number"
+            name="d6"
+            id="d6"
+            min="0"
+            max="20"
+            bind:value={d6}
+            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            aria-describedby="d6-damage"
+          />
+        </div>
+        <p class="mt-2 text-sm text-gray-500" id="d6-damage">
+          The number of d6 damage dice.
+        </p>
+      </div>
+      <div>
+        <label
+          for="d8"
+          class="block text-sm font-medium leading-6 text-gray-900"
+          >d8 Damage</label
+        >
+        <div class="mt-2">
+          <input
+            type="number"
+            name="d8"
+            id="d8"
+            min="0"
+            max="20"
+            bind:value={d8}
+            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            aria-describedby="d8-damage"
+          />
+        </div>
+        <p class="mt-2 text-sm text-gray-500" id="d8-damage">
+          The number of d8 damage dice.
+        </p>
+      </div>
+      <div>
+        <label
+          for="d10"
+          class="block text-sm font-medium leading-6 text-gray-900"
+          >d10 Damage</label
+        >
+        <div class="mt-2">
+          <input
+            type="number"
+            name="d10"
+            id="d10"
+            min="0"
+            max="20"
+            bind:value={d10}
+            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            aria-describedby="d10-damage"
+          />
+        </div>
+        <p class="mt-2 text-sm text-gray-500" id="d10damage">
+          The number of d10 damage dice.
+        </p>
+      </div>
+      <div>
+        <label
+          for="d12"
+          class="block text-sm font-medium leading-6 text-gray-900"
+          >d12 Damage</label
+        >
+        <div class="mt-2">
+          <input
+            type="number"
+            name="d12"
+            id="d12"
+            min="0"
+            max="20"
+            bind:value={d12}
+            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            aria-describedby="d12-damage"
+          />
+        </div>
+        <p class="mt-2 text-sm text-gray-500" id="d12damage">
+          The number of d12 damage dice.
         </p>
       </div>
       <div>
@@ -229,27 +360,6 @@
         </div>
         <p class="mt-2 text-sm text-gray-500" id="crit-multiplier">
           How much you multiply your damage on crit.
-        </p>
-      </div>
-      <div>
-        <label
-          for="apr"
-          class="block text-sm font-medium leading-6 text-gray-900">APR</label
-        >
-        <div class="mt-2">
-          <input
-            type="number"
-            name="apr"
-            id="apr"
-            min="0"
-            max="20"
-            bind:value={apr}
-            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            aria-describedby="attacks-per-round"
-          />
-        </div>
-        <p class="mt-2 text-sm text-gray-500" id="attacks-per-round">
-          How many attacks per round that you make.
         </p>
       </div>
     </div>
